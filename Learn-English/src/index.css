@@ -24,10 +24,17 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  height: 100%;
+}
+
+#root {
+  height: 100%; /* Asegura que el contenedor ocupe toda la altura de la ventana */
+  width: 100%;  /* Asegura que el contenedor ocupe todo el ancho de la ventana */
+}
+
+html{
+  padding: 1em;
+
 }
 
 h1 {
@@ -42,12 +49,12 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #ff0000;
   cursor: pointer;
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: #000000;
 }
 button:focus,
 button:focus-visible {
