@@ -1,7 +1,9 @@
 import React from "react";
+import { ObtenerDatos } from './FireStoreManager'
 
 export const Home = () =>{
-    return <h2> Bienvenido a la página de inicio</h2>
+    return <button onClick={ObtenerDatos} > Obten los datos</button>
+
 }
 
 export const News = () => {
