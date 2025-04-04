@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { RandomVocabulary } from "./FireStoreManager";
+import { addDocumentsInBatch } from "./others/InsertGroupObjectsFirebase";
 
 export default function Vocabulary() {
   const [doc, setDoc] = useState({});
@@ -10,7 +11,10 @@ export default function Vocabulary() {
 
   const [translatedWords, setTranslatedWords] = useState([]); // ⬅️ Debe ser un array vacío
 
+  const [enToEs,setEnToEs] = useState(true);
+
   const handleRandomWord = async () => {
+    // addDocumentsInBatch(); //Para añadir una pila de archivos desde InsertGroupObjectsFirebase
     const word = await RandomVocabulary(); // Asumimos que RandomVocabulary devuelve la palabra aleatoria
     setDoc(word); // Actualizamos el estado con la palabra aleatoria
   };
@@ -20,7 +24,12 @@ export default function Vocabulary() {
   };
 
   const checkTranslation = () => {
-    if (translation === doc.Es) {
+    let lenguage;
+    if(enToEs)lenguage = doc.Es
+    else lenguage = doc.En;
+    console.log(lenguage); 
+    
+    if (compareStrings(translation, lenguage)) {
       setTranslationCorrect(true);
       setTimeout(() => setTranslationCorrect(false), 1950);
       
@@ -36,7 +45,15 @@ export default function Vocabulary() {
   };
 
   const ShowTranslation = () => {
-    setTranslation(doc.Es);
+    let lenguage;
+    if(enToEs)lenguage = doc.Es
+    else lenguage = doc.En;
+
+    setTranslation(lenguage);
+  }
+
+  const ChangeLenguage = () => {
+    setEnToEs(!enToEs);
   }
 
   return (
@@ -47,9 +64,25 @@ export default function Vocabulary() {
 
         <div>
           <div className="inputs">
-            <input type="text" value={doc.En || ''} readOnly />
-            &emsp;&emsp;&emsp;&emsp;
+            <div className="container">
+            {enToEs ? (
+              <>
+                English
+                <input type="text" value={doc.En || ''} readOnly />
+              </>
+          ):(<>
+            Español
+            <input type="text" value={doc.Es || ''} readOnly />
+          </>
+          )}
+
+          </div>
+            &emsp;&emsp; <button onClick ={ChangeLenguage}> Change </button>&emsp;&emsp;
+            <div className="container">
+            {enToEs ? (<>English</>) : (<>English</>)}
             <input type="text" value={translation} onChange={handleChangeTranslation} />
+
+            </div>
           </div>
 
           <br />
@@ -76,7 +109,7 @@ function TranslatedWordsTable({ translatedWords }) {
     let reverseTranslatedWords = [...translatedWords].reverse();
   return (
     <div className="container">
-      <h2>Vocabulary Table</h2>
+      <h3>Vocabulary Table</h3>
       <table>
         <thead>
           <tr>
@@ -95,4 +128,16 @@ function TranslatedWordsTable({ translatedWords }) {
       </table>
     </div>
   );
+}
+
+function compareStrings(str1, str2) { // devuelve true o false comparando los string sin tener en cuenta mayúsuculas ni acentos 
+  return str1
+    .toLocaleLowerCase() // Convierte todo a minúsculas
+    .normalize("NFD")    // Separa los acentos de las letras
+    .replace(/[\u0300-\u036f]/g, "") // Elimina los acentos
+    === 
+    str2
+    .toLocaleLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }

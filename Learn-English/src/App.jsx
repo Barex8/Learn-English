@@ -3,8 +3,9 @@ import './App.css'
 import Header from './Header'
 import { BrowserRouter as Router, Route, Link, Routes } from 'react-router-dom';
 import NavBar from './NavBar';
-import { News, Home } from './Routes';
 import Vocabulary from './Vocabulary';
+import AddVocabularyWord from './AddVocabularyWord';
+import Login from './Login';
 
 function App() {
 
@@ -13,8 +14,9 @@ function App() {
       <Header />
       <NavBar />
         <Routes>
-          <Route path="/" element = {<Home />} />
+          <Route path="/Login" element = {<Login />} />
           <Route path="/Vocabulary" element = {<Vocabulary />} />
+          <Route path="/AddVocabularyWord" element = {<AddVocabularyWord />} />
         </Routes>
     </Router>
       
