@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { RandomVocabulary } from "./FireStoreManager";
 import { addDocumentsInBatch } from "./others/InsertGroupObjectsFirebase";
+import React from "react";
+import FloatingMessage from "./others/FlotatingMessage";
 
 export default function Vocabulary() {
   const [doc, setDoc] = useState({});
   const [translation, setTranslation] = useState("");
-
-  const [translationCorrect, setTranslationCorrect] = useState(false);
-  const [translationIncorrect, setTranslationIncorrect] = useState(false);
 
   const [translatedWords, setTranslatedWords] = useState([]); // ⬅️ Debe ser un array vacío
 
@@ -16,6 +15,11 @@ export default function Vocabulary() {
   const handleRandomWord = async () => {
     // addDocumentsInBatch(); //Para añadir una pila de archivos desde InsertGroupObjectsFirebase
     const word = await RandomVocabulary(); // Asumimos que RandomVocabulary devuelve la palabra aleatoria
+    if(word === "NoUserId"){
+      showMessage("First Log in");
+    }else if(word === "NoWords"){
+      showMessage("First insert words");
+    }
     setDoc(word); // Actualizamos el estado con la palabra aleatoria
   };
 
@@ -24,14 +28,17 @@ export default function Vocabulary() {
   };
 
   const checkTranslation = () => {
+    if(!translation){
+      showMessage("No translation to check","red");
+      return;
+    }
+
     let lenguage;
     if(enToEs)lenguage = doc.Es
     else lenguage = doc.En;
-    console.log(lenguage); 
     
     if (compareStrings(translation, lenguage)) {
-      setTranslationCorrect(true);
-      setTimeout(() => setTranslationCorrect(false), 1950);
+      showMessage("Correct","rgb(26, 231, 77)");
       
       // Agregar palabra traducida correctamente a la lista
       setTranslatedWords([...translatedWords, doc]); 
@@ -39,8 +46,7 @@ export default function Vocabulary() {
       setTranslation("");
       
     } else {
-      setTranslationIncorrect(true);
-      setTimeout(() => setTranslationIncorrect(false), 1950);
+      showMessage("Incorrect", "red")
     }
   };
 
@@ -56,6 +62,13 @@ export default function Vocabulary() {
     setEnToEs(!enToEs);
   }
 
+  const showMessage = (message, color = "red") => {
+    window.dispatchEvent(new CustomEvent("show-message", {
+      detail: { message, color }
+    }));
+  };
+
+
   return (
     <>
       <div>
@@ -65,22 +78,26 @@ export default function Vocabulary() {
         <div>
           <div className="inputs">
             <div className="container">
-            {enToEs ? (
-              <>
-                English
-                <input type="text" value={doc.En || ''} readOnly />
-              </>
-          ):(<>
-            Español
-            <input type="text" value={doc.Es || ''} readOnly />
-          </>
-          )}
+              {enToEs ? (
+                <>
+                  English
+                  <input type="text" value={doc.En || ''} readOnly />
+                </>
+              ):(
+                <>
+                Español
+                <input type="text" value={doc.Es || ''} readOnly />
+                </>
+              )}
+            </div>
 
-          </div>
             &emsp;&emsp; <button onClick ={ChangeLenguage}> Change </button>&emsp;&emsp;
+            <FloatingMessage />
+
             <div className="container">
-            {enToEs ? (<>English</>) : (<>English</>)}
-            <input type="text" value={translation} onChange={handleChangeTranslation} />
+
+              {enToEs ? (<>Español</>) : (<>English</>)}
+              <input type="text" value={translation} onChange={handleChangeTranslation} />
 
             </div>
           </div>
@@ -91,9 +108,6 @@ export default function Vocabulary() {
               <button onClick={checkTranslation}> Check </button>
               <button onClick={ShowTranslation}> Desist </button>
             </div>
-
-            {translationCorrect && <div className="floating-Correct-text">Correcto</div>}
-            {translationIncorrect && <div className="floating-Incorrect-text">Incorrecto</div>}
           </div>
         </div>
 
@@ -103,6 +117,8 @@ export default function Vocabulary() {
     </>
   );
 }
+
+
 
 // ✅ Convertimos la función en un componente
 function TranslatedWordsTable({ translatedWords }) {

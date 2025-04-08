@@ -1,10 +1,21 @@
 import { useState, useEffect } from "react";
 import { AddVocabulary } from "./FireStoreManager";
+import FloatingMessage from "./others/FlotatingMessage";
+import { getUserVocabularyWords } from "./FireStoreManager";
 
 export default function AddVocabularyWord(){
 
-    const [selectedOption, setSelectedOption] = useState("English");
     const [wordsSaved, setWordsSaved] = useState([]);
+    
+    useEffect(() => {
+        const fetchWords = async () => {
+          const words = await getUserVocabularyWords(); // Llamamos a la función que obtiene las palabras
+          setWordsSaved(words); // Establecemos el estado con el array de palabras
+        };
+    
+        fetchWords(); // Ejecutamos la función asíncrona
+      }, []); // Solo se ejecuta una vez cuando el componente se monta
+    
 
     const [esWord, setEsWord] = useState("");  // Estado para la palabra en español
     const [enWord, setEnWord] = useState("");  // Estado para la palabra en inglés
@@ -17,14 +28,27 @@ export default function AddVocabularyWord(){
         setEsWord(e.target.value); // Actualiza el estado con el valor del input
     };
 
-    const handleAddVocabulary = () => {
-        console.log("En Word:", enWord, "Es Word:", esWord); // Verifica que los valores son correctos
-        if (enWord && esWord) { // Solo llama a AddVocabulary si ambos valores no son vacíos
-            AddVocabulary(enWord, esWord); // Llama a la función AddVocabulary pasando los valores
+    const handleAddVocabulary = async () => {   
+        if(!localStorage.getItem("username")){ //Verificamos que hemos iniciado sesión
+            showMessage("First log in")
+            return;
+        }
+
+        if ((enWord != "" || esWord != "")) { // Solo llama a AddVocabulary si ambos valores no son vacíos
+            await AddVocabulary(enWord, esWord); // Llama a la función AddVocabulary pasando los valores
+            showMessage("Word added","rgb(26, 231, 77)");
+            const words = await getUserVocabularyWords(); // Vuelve a obtener todas las palabras
+            setWordsSaved(words);
         } else {
-            console.log("Ambos campos deben ser completados.");
+            showMessage("The inputs can't be empty")
         }
     };
+    
+    const showMessage = (message, color = "red") => {
+        window.dispatchEvent(new CustomEvent("show-message", {
+          detail: { message, color }
+        }));
+    }
 
     return (
         <>
@@ -40,18 +64,19 @@ export default function AddVocabularyWord(){
                         Español
                         <input type="text" onChange={handleEsWordChange} value={esWord} />
                     </div>
+                <FloatingMessage />
                 </div>
                 <br />
                 <button onClick={handleAddVocabulary}> Add </button> {/* Llama a la función para agregar */}
             </div>
             <h3> Your vocabulary words</h3>
-            {/* <WordsSavedTable /> */}
+            <WordsSavedTable wordsSaved={wordsSaved}/>
         </>
     );
 }
 
 function WordsSavedTable({ wordsSaved }) {
-    let reverseSavedWords = [...wordsSaved].reverse();
+    let reverseSavedWords = [...wordsSaved];
     return (
         <div className="container">
             <h2>Vocabulary Table</h2>

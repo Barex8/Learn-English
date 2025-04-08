@@ -2,6 +2,7 @@ import React from "react";
 import { ObtenerDatos } from './FireStoreManager'
 import { useState } from "react";
 import { verifyUser,createUser } from "./FireStoreManager";
+import FloatingMessage from "./others/FlotatingMessage";
 
 export default function Home(){
     const [username,setUsername] = useState("");
@@ -33,7 +34,7 @@ export default function Home(){
     }
 
     return( <>
-    <h2>Login</h2>
+    <h2>Log in</h2>
     <div className="login-page">
         <div className="form">
 
@@ -47,6 +48,7 @@ export default function Home(){
 
             <br />
             <button onClick={logIn}>Log in</button>
+            <FloatingMessage />
             {credentialState !== "" && (<>
                 <div>
                 <span style={{color:"red"}}> {credentialState} </span>

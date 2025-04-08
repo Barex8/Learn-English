@@ -4,6 +4,8 @@ import { useState } from "react";
 
 const db = getFirestore(app);
 
+export const loged = false;
+
 export const ObtenerDatos = async () => {
   const querySnapshot = await getDocs(collection(db, "vocabulary")); //Accedemos a la colección
   querySnapshot.forEach((doc) => { // recorremos cada documento
@@ -14,6 +16,7 @@ export const ObtenerDatos = async () => {
 
 export const RandomVocabulary = async () => {
   let idUser = localStorage.getItem("userId");
+  if(!idUser) return "NoUserId";
 
   // Consulta para obtener los vocabularios del usuario
   const userRef = collection(db, "users_vocabulary");
@@ -53,6 +56,7 @@ export const RandomVocabulary = async () => {
     }
   } else {
     console.log("No se encontraron vocabularios para este usuario.");
+    return ("NoWords");
   }
 };
 
@@ -75,6 +79,34 @@ export const AddVocabulary = async (enWord,esWord) => {
     }
   }
 
+  export const getUserVocabularyWords = async () => {
+    const idUser = localStorage.getItem("userId");
+    if (!idUser) return [];
+  
+    // 1. Obtener relaciones del usuario
+    const userRef = collection(db, "users_vocabulary");
+    const q = query(userRef, where("id_user", "==", idUser));
+    const querySnapshot = await getDocs(q);
+    //Aquí ya tiene solamente los registros de la tabla intermedia que coinciden con el usuario
+  
+    if (querySnapshot.empty) return [];
+  
+    // 2. Obtener las IDs de las palabras
+    const vocabularyIds = querySnapshot.docs.map(doc => doc.data().id_vocabulary); //Extrae todos los valores de id_vocabulary que están relacionados con ese usuario
+  
+    // 3. Hacer múltiples lecturas a Firestore para cada palabra
+    const wordPromises = vocabularyIds.map(async (id) => { // por cada palabra la añadimos a wordPromises
+      const wordDoc = await getDocs(
+        query(collection(db, "vocabulary"), where("__name__", "==", id)) // Esta línea busca en la colección vocabulary un documento cuyo ID (clave primaria) sea igual al que recuperamos. 
+        // En Firestore, el ID no es un campo normal, se accede usando "__name__".
+      );
+      return wordDoc.docs[0]?.data(); // asumimos que hay un documento por ID, añade la palabra a wordPromises
+    });
+  
+    const words = await Promise.all(wordPromises); //Espera a que termine wordPromises y guarda todas las palabras
+    return words.filter(Boolean); // quitamos posibles undefined
+  };
+
   export async function verifyUser(user, password) {
     console.log(user, " username");
     if (user === "") return "Insert an username";
@@ -83,8 +115,6 @@ export const AddVocabulary = async (enWord,esWord) => {
     const q = query(userRef, where("username", "==", user));
   
     const querySnapshot = await getDocs(q);
-  
-    console.log("Usuarios encontrados con ese username:", querySnapshot.size);
   
     if (!querySnapshot.empty) {
       for (const doc of querySnapshot.docs) {
@@ -95,7 +125,7 @@ export const AddVocabulary = async (enWord,esWord) => {
           localStorage.setItem("username", doc.data().username);
           window.dispatchEvent(new Event("usernameChanged"));
 
-          console.log(localStorage.getItem("userId"),doc.id); // Debería mostrar "12345"
+          console.log(localStorage.getItem("userId"),doc.id);
           alert("Succesful login")
 
           return "";

@@ -14,7 +14,6 @@ export default function NavBar(){
         <div className="dropdown-content">
           <Link to="./Vocabulary">Learn</Link>
           <Link to="./AddVocabularyWord">Insert new words</Link>
-          <Link to="#">Link 3</Link>
         </div>
       </div>      
     </div>
